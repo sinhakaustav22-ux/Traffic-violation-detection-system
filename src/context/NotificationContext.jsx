@@ -26,7 +26,7 @@ export const NotificationProvider = ({ children }) => {
 
     fetchNotifications();
 
-    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const socketUrl = '/';
     const socket = io(socketUrl);
 
     socket.on('new_violation', (violation) => {

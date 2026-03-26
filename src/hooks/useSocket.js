@@ -10,7 +10,7 @@ export const useSocket = (event, callback) => {
   }, [callback]);
 
   useEffect(() => {
-    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const socketUrl = '/';
     socketRef.current = io(socketUrl);
 
     socketRef.current.on(event, (data) => {

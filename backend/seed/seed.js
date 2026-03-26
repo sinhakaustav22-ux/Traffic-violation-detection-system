@@ -15,18 +15,19 @@ const runSeed = async () => {
     const schemaPath = path.join(__dirname, '../db/schema.sql');
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
     
-    // Split by semicolon but keep it somewhat intact, or just run the whole string
-    // pg can run multiple statements in one query if separated by semicolon
-    await query(`
-      DROP TABLE IF EXISTS uploaded_files CASCADE;
-      DROP TABLE IF EXISTS dashboard_notifications CASCADE;
-      DROP TABLE IF EXISTS sms_alerts CASCADE;
-      DROP TABLE IF EXISTS challans CASCADE;
-      DROP TABLE IF EXISTS violations CASCADE;
-      DROP TABLE IF EXISTS users CASCADE;
-    `);
+    // SQLite doesn't support CASCADE in DROP TABLE, so we drop in reverse order
+    await query(`DROP TABLE IF EXISTS uploaded_files;`);
+    await query(`DROP TABLE IF EXISTS dashboard_notifications;`);
+    await query(`DROP TABLE IF EXISTS sms_alerts;`);
+    await query(`DROP TABLE IF EXISTS challans;`);
+    await query(`DROP TABLE IF EXISTS violations;`);
+    await query(`DROP TABLE IF EXISTS users;`);
     
-    await query(schemaSql);
+    // Split schema by semicolon and execute each statement
+    const statements = schemaSql.split(';').filter(stmt => stmt.trim() !== '');
+    for (const stmt of statements) {
+      await query(stmt + ';');
+    }
     console.log('Schema recreated.');
 
     // 2. Insert users
