@@ -47,7 +47,13 @@ const runSeed = async () => {
     const types = ['NO_HELMET', 'RED_LIGHT_JUMP', 'TRIPLE_RIDING', 'NO_SEATBELT'];
     const statuses = ['PENDING', 'REVIEWED', 'CHALLAN_ISSUED', 'DISMISSED'];
     const locations = ["College Main Gate", "Library Junction", "Hostel Road", "Admin Block Entry", "Parking Zone B"];
-    const vehicles = ['MH12AB1234', 'OD05XY9988', 'KA01CD5678', 'DL04EF9012', 'UP32GH3456'];
+    const vehicles = [
+      { number: 'MH12AB1234', type: 'TWO_WHEELER' },
+      { number: 'OD05XY9988', type: 'FOUR_WHEELER' },
+      { number: 'KA01CD5678', type: 'TWO_WHEELER' },
+      { number: 'DL04EF9012', type: 'FOUR_WHEELER' },
+      { number: 'UP32GH3456', type: 'TWO_WHEELER' }
+    ];
     
     // Fines based on constants
     const fines = {
@@ -57,17 +63,19 @@ const runSeed = async () => {
       NO_SEATBELT: 1000
     };
 
-    const vehicleTypes = {
-      NO_HELMET: 'TWO_WHEELER',
-      RED_LIGHT_JUMP: 'FOUR_WHEELER',
-      TRIPLE_RIDING: 'TWO_WHEELER',
-      NO_SEATBELT: 'FOUR_WHEELER'
-    };
-
     let challanIssuedViolations = [];
 
     for (let i = 0; i < 40; i++) {
-      const type = types[i % 4];
+      const vehicleObj = vehicles[i % 5];
+      const vehicle = vehicleObj.number;
+      const vType = vehicleObj.type;
+      
+      let type;
+      if (vType === 'TWO_WHEELER') {
+        type = ['NO_HELMET', 'TRIPLE_RIDING', 'RED_LIGHT_JUMP'][i % 3];
+      } else {
+        type = ['NO_SEATBELT', 'RED_LIGHT_JUMP'][i % 2];
+      }
       
       // Mix statuses: 15 PENDING, 10 REVIEWED, 12 CHALLAN_ISSUED, 3 DISMISSED
       let status = 'PENDING';
@@ -77,7 +85,6 @@ const runSeed = async () => {
       else status = 'DISMISSED';
 
       const location = locations[i % 5];
-      const vehicle = vehicles[i % 5];
       const score = (Math.random() * (0.98 - 0.60) + 0.60).toFixed(2);
       
       // Spread evenly across last 21 days
@@ -91,7 +98,7 @@ const runSeed = async () => {
         (violation_type, vehicle_type, vehicle_number, location, confidence_score, status, fine_amount, created_at) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id
-      `, [type, vehicleTypes[type], vehicle, location, score, status, fines[type], date.toISOString()]);
+      `, [type, vType, vehicle, location, score, status, fines[type], date.toISOString()]);
 
       if (status === 'CHALLAN_ISSUED') {
         challanIssuedViolations.push(result.rows[0].id);

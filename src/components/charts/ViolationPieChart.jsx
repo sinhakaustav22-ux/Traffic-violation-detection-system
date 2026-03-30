@@ -1,7 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-const ViolationPieChart = ({ data }) => {
+const ViolationPieChart = ({ data = [] }) => {
   const colors = {
     NO_HELMET: '#DC2626', // red
     RED_LIGHT_JUMP: '#D97706', // orange
@@ -9,7 +9,7 @@ const ViolationPieChart = ({ data }) => {
     NO_SEATBELT: '#2563EB' // blue
   };
 
-  const formattedData = data.map(item => ({
+  const formattedData = (data || []).map(item => ({
     name: item.violation_type.replace(/_/g, ' '),
     value: parseInt(item.count, 10),
     type: item.violation_type

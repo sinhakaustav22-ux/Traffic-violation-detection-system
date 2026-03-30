@@ -81,7 +81,7 @@ const ChallansPage = () => {
           <div className="h-64 flex items-center justify-center">
             <LoadingSpinner size="lg" />
           </div>
-        ) : challans.length === 0 ? (
+        ) : !challans || challans.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center">
             <FileText size={48} className="text-gray-300 mb-4" />
             <p className="text-gray-500 text-lg">No challans issued yet.</p>

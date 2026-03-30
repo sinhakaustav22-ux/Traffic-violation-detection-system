@@ -106,14 +106,14 @@ const ViolationsPage = () => {
       />
 
       <div className="mb-4 text-sm text-gray-600 font-medium">
-        Showing {violations.length} of {total} results
+        Showing {violations ? violations.length : 0} of {total} results
       </div>
 
       {loading ? (
         <div className="h-64 flex items-center justify-center bg-white rounded-xl border border-[#E2E8F0]">
           <LoadingSpinner size="lg" />
         </div>
-      ) : violations.length === 0 ? (
+      ) : !violations || violations.length === 0 ? (
         <div className="h-64 flex flex-col items-center justify-center bg-white rounded-xl border border-[#E2E8F0]">
           <p className="text-gray-500 text-lg">No violations found matching your criteria.</p>
           <button 

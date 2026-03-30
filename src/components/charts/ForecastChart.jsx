@@ -3,7 +3,8 @@ import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, Respon
 
 const ForecastChart = ({ data }) => {
   // data contains historical and forecast arrays
-  const { historical, forecast } = data;
+  const historical = data?.historical || [];
+  const forecast = data?.forecast || [];
   
   // Combine data for chart
   const chartData = [

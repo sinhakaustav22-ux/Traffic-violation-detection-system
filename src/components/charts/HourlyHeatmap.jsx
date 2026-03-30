@@ -1,12 +1,14 @@
 import React from 'react';
 
-const HourlyHeatmap = ({ data }) => {
+const HourlyHeatmap = ({ data = [] }) => {
   // Initialize 7x24 grid with 0s
   const grid = Array(7).fill().map(() => Array(24).fill(0));
   let maxCount = 0;
 
+  const safeData = data || [];
+
   // Populate grid and find max
-  data.forEach(item => {
+  safeData.forEach(item => {
     const day = parseInt(item.day_of_week, 10);
     const hour = parseInt(item.hour_of_day, 10);
     const count = parseInt(item.count, 10);

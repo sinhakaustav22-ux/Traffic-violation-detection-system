@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import axiosClient from '../api/axiosClient.js';
 import { useAuth } from './AuthContext.jsx';
+import { useSocket } from '../hooks/useSocket.js';
 
 const NotificationContext = createContext();
 
@@ -17,37 +17,42 @@ export const NotificationProvider = ({ children }) => {
     const fetchNotifications = async () => {
       try {
         const res = await axiosClient.get('/notifications');
-        setNotifications(res.data);
-        setUnreadCount(res.data.length);
+        const data = res.data || [];
+        setNotifications(data);
+        setUnreadCount(data.length);
       } catch (err) {
         console.error('Failed to fetch notifications', err);
       }
     };
 
     fetchNotifications();
-
-    const socketUrl = '/';
-    const socket = io(socketUrl);
-
-    socket.on('new_violation', (violation) => {
-      toast.error(`New Violation: ${violation.violation_type.replace(/_/g, ' ')} detected!`);
-    });
-
-    socket.on('new_notification', (notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
   }, [user]);
+
+  // Use the shared socket connection
+  useSocket('new_violation', (violation) => {
+    if (user) {
+      toast.error(`New Violation: ${violation.violation_type.replace(/_/g, ' ')} detected!`);
+    }
+  });
+
+  useSocket('new_notification', (notification) => {
+    if (user) {
+      setNotifications(prev => {
+        const current = prev || [];
+        return [notification, ...current];
+      });
+      setUnreadCount(prev => (prev || 0) + 1);
+    }
+  });
 
   const markAllRead = async () => {
     try {
       await axiosClient.post('/notifications/read-all');
       setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      setNotifications(prev => {
+        const current = prev || [];
+        return current.map(n => ({ ...n, is_read: true }));
+      });
     } catch (err) {
       console.error('Failed to mark notifications as read', err);
     }

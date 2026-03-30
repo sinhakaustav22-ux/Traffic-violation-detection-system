@@ -34,11 +34,11 @@ export const getAllViolations = async (req, res) => {
     }
     
     if (search) {
-      whereClause += ` AND vehicle_number ILIKE $${paramIndex++}`;
+      whereClause += ` AND vehicle_number LIKE $${paramIndex++}`;
       params.push(`%${search}%`);
     }
     
-    const countQuery = `SELECT COUNT(*) FROM violations ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) as count FROM violations ${whereClause}`;
     const countResult = await query(countQuery, params);
     const total = parseInt(countResult.rows[0].count);
     
@@ -138,7 +138,7 @@ export const updateViolationStatus = async (req, res) => {
     
     const result = await query(`
       UPDATE violations 
-      SET status = $1, reviewed_by = $2, updated_at = NOW() 
+      SET status = $1, reviewed_by = $2, updated_at = CURRENT_TIMESTAMP 
       WHERE id = $3 
       RETURNING *
     `, [status, req.user.id, id]);

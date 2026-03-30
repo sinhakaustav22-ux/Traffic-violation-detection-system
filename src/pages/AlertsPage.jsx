@@ -52,7 +52,7 @@ const AlertsPage = () => {
           <div className="h-64 flex items-center justify-center">
             <LoadingSpinner size="lg" />
           </div>
-        ) : alerts.length === 0 ? (
+        ) : !alerts || alerts.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center">
             <MessageSquare size={48} className="text-gray-300 mb-4" />
             <p className="text-gray-500 text-lg">No alerts have been sent yet.</p>

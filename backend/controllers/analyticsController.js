@@ -3,17 +3,16 @@ import { getSevenDayForecast } from '../services/forecastService.js';
 
 export const getSummary = async (req, res) => {
   try {
-    const totalResult = await query('SELECT COUNT(*) FROM violations');
-    const todayResult = await query('SELECT COUNT(*) FROM violations WHERE DATE(created_at) = CURRENT_DATE');
-    const pendingResult = await query("SELECT COUNT(*) FROM violations WHERE status = 'PENDING'");
+    const totalResult = await query('SELECT COUNT(*) as count FROM violations');
+    const todayResult = await query("SELECT COUNT(*) as count FROM violations WHERE date(created_at) = date('now')");
+    const pendingResult = await query("SELECT COUNT(*) as count FROM violations WHERE status = 'PENDING'");
     
-    const byTypeResult = await query('SELECT violation_type, COUNT(*) FROM violations GROUP BY violation_type');
-    const byStatusResult = await query('SELECT status, COUNT(*) FROM violations GROUP BY status');
+    const byTypeResult = await query('SELECT violation_type, COUNT(*) as count FROM violations GROUP BY violation_type');
+    const byStatusResult = await query('SELECT status, COUNT(*) as count FROM violations GROUP BY status');
     
     const challansThisMonthResult = await query(`
-      SELECT COUNT(*) FROM challans 
-      WHERE EXTRACT(MONTH FROM issued_at) = EXTRACT(MONTH FROM CURRENT_DATE)
-      AND EXTRACT(YEAR FROM issued_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+      SELECT COUNT(*) as count FROM challans 
+      WHERE strftime('%Y-%m', issued_at) = strftime('%Y-%m', 'now')
     `);
     
     res.json({
@@ -33,11 +32,11 @@ export const getSummary = async (req, res) => {
 export const getDailyTrend = async (req, res) => {
   try {
     const result = await query(`
-      SELECT DATE(created_at) as date, COUNT(*) 
+      SELECT date(created_at) as date, COUNT(*) as count
       FROM violations 
-      WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
-      GROUP BY DATE(created_at) 
-      ORDER BY DATE(created_at) ASC
+      WHERE date(created_at) >= date('now', '-30 days')
+      GROUP BY date(created_at) 
+      ORDER BY date(created_at) ASC
     `);
     res.json(result.rows);
   } catch (error) {
@@ -48,7 +47,7 @@ export const getDailyTrend = async (req, res) => {
 
 export const getByType = async (req, res) => {
   try {
-    const result = await query('SELECT violation_type, COUNT(*) FROM violations GROUP BY violation_type');
+    const result = await query('SELECT violation_type, COUNT(*) as count FROM violations GROUP BY violation_type');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching by type:', error);
@@ -59,9 +58,9 @@ export const getByType = async (req, res) => {
 export const getHourlyHeatmap = async (req, res) => {
   try {
     const result = await query(`
-      SELECT EXTRACT(DOW FROM created_at) as day_of_week, 
-             EXTRACT(HOUR FROM created_at) as hour_of_day, 
-             COUNT(*) 
+      SELECT cast(strftime('%w', created_at) as integer) as day_of_week, 
+             cast(strftime('%H', created_at) as integer) as hour_of_day, 
+             COUNT(*) as count
       FROM violations 
       GROUP BY day_of_week, hour_of_day
     `);
@@ -75,11 +74,11 @@ export const getHourlyHeatmap = async (req, res) => {
 export const getForecast = async (req, res) => {
   try {
     const result = await query(`
-      SELECT DATE(created_at) as date, COUNT(*) 
+      SELECT date(created_at) as date, COUNT(*) as count
       FROM violations 
-      WHERE created_at >= CURRENT_DATE - INTERVAL '14 days'
-      GROUP BY DATE(created_at) 
-      ORDER BY DATE(created_at) ASC
+      WHERE date(created_at) >= date('now', '-14 days')
+      GROUP BY date(created_at) 
+      ORDER BY date(created_at) ASC
     `);
     
     const forecast = getSevenDayForecast(result.rows);

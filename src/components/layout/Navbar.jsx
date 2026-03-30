@@ -36,7 +36,7 @@ const Navbar = () => {
               )}
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (
+              {!notifications || notifications.length === 0 ? (
                 <div className="px-4 py-3 text-sm text-gray-500 text-center">
                   No new notifications
                 </div>

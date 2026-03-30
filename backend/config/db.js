@@ -12,6 +12,9 @@ export const initDb = async () => {
   
   dbInstance = new Database(path.join(__dirname, '../../ctvds.sqlite'));
   
+  // Enable WAL mode for better concurrency and to prevent corruption
+  dbInstance.pragma('journal_mode = WAL');
+  
   // Enable foreign keys
   dbInstance.pragma('foreign_keys = ON');
   
@@ -56,4 +59,12 @@ export const query = async (text, params = []) => {
   }
 };
 
-export default { query, initDb };
+export const closeDb = () => {
+  if (dbInstance) {
+    console.log('Closing SQLite database connection');
+    dbInstance.close();
+    dbInstance = null;
+  }
+};
+
+export default { query, initDb, closeDb };

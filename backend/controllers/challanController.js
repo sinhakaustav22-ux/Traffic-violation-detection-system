@@ -33,7 +33,7 @@ export const issueChallan = async (req, res) => {
     const pdfPath = await generateChallan(violation, challan, req.user.name);
     
     await query('UPDATE challans SET pdf_path = $1 WHERE id = $2', [pdfPath, challan.id]);
-    await query('UPDATE violations SET status = $1, updated_at = NOW() WHERE id = $2', ['CHALLAN_ISSUED', violation.id]);
+    await query('UPDATE violations SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', ['CHALLAN_ISSUED', violation.id]);
     
     if (process.env.AUTHORITY_PHONE) {
       await sendBothAlerts(process.env.AUTHORITY_PHONE, violation);
@@ -100,7 +100,7 @@ export const markAsPaid = async (req, res) => {
       SET fine_paid = $1, paid_at = $2 
       WHERE id = $3 
       RETURNING *
-    `, [paid, paid ? new Date() : null, id]);
+    `, [paid ? 1 : 0, paid ? new Date().toISOString() : null, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Challan not found' });

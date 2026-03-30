@@ -12,7 +12,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getSummary, getDailyTrend, getByType } from '../api/analyticsAPI.js';
 import { getViolations } from '../api/violationsAPI.js';
-import { formatViolationType } from '../utils/formatters.js';
+import { useSocket } from '../hooks/useSocket.js';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -23,29 +23,56 @@ const DashboardPage = () => {
   const [typeData, setTypeData] = useState([]);
   const [recentViolations, setRecentViolations] = useState([]);
 
+  const fetchData = async () => {
+    try {
+      const [summaryRes, trendRes, typeRes, violationsRes] = await Promise.all([
+        getSummary(),
+        getDailyTrend(),
+        getByType(),
+        getViolations({ limit: 10 })
+      ]);
+      
+      setSummary(summaryRes);
+      setTrendData(trendRes || []);
+      setTypeData(typeRes || []);
+      setRecentViolations(violationsRes.violations || []);
+    } catch (err) {
+      console.error('Failed to fetch dashboard data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [summaryRes, trendRes, typeRes, violationsRes] = await Promise.all([
-          getSummary(),
-          getDailyTrend(),
-          getByType(),
-          getViolations({ limit: 10 })
-        ]);
-        
-        setSummary(summaryRes);
-        setTrendData(trendRes);
-        setTypeData(typeRes);
-        setRecentViolations(violationsRes.violations);
-      } catch (err) {
-        console.error('Failed to fetch dashboard data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
+
+  // Listen for real-time updates
+  useSocket('new_violation', (newViolation) => {
+    // Add to recent violations
+    setRecentViolations(prev => {
+      const current = prev || [];
+      if (current.some(v => v.id === newViolation.id)) return current;
+      const updated = [newViolation, ...current];
+      if (updated.length > 10) updated.pop();
+      return updated;
+    });
+    
+    // Update summary stats optimistically
+    setSummary(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        today: parseInt(prev.today) + 1,
+        pending: parseInt(prev.pending) + 1
+      };
+    });
+    
+    // For charts, we could update them optimistically too, or just refetch
+    // Refetching is safer for complex aggregations
+    getDailyTrend().then(setTrendData);
+    getByType().then(setTypeData);
+  });
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -55,7 +82,7 @@ const DashboardPage = () => {
   };
 
   const getMostCommonType = () => {
-    if (!typeData.length) return { type: 'N/A', count: 0 };
+    if (!typeData || !typeData.length) return { type: 'N/A', count: 0 };
     return typeData.reduce((prev, current) => 
       (parseInt(prev.count) > parseInt(current.count)) ? prev : current
     );
@@ -156,7 +183,7 @@ const DashboardPage = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {recentViolations.map((v) => (
+              {(recentViolations || []).map((v) => (
                 <tr key={v.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

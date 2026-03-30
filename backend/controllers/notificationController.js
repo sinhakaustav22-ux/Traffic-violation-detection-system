@@ -4,7 +4,7 @@ export const getNotifications = async (req, res) => {
   try {
     const result = await query(`
       SELECT * FROM dashboard_notifications 
-      WHERE is_read = FALSE 
+      WHERE is_read = 0 
       ORDER BY created_at DESC 
       LIMIT 50
     `);
@@ -17,7 +17,7 @@ export const getNotifications = async (req, res) => {
 
 export const markAllRead = async (req, res) => {
   try {
-    await query('UPDATE dashboard_notifications SET is_read = TRUE WHERE is_read = FALSE');
+    await query('UPDATE dashboard_notifications SET is_read = 1 WHERE is_read = 0');
     res.json({ success: true });
   } catch (error) {
     console.error('Error marking notifications as read:', error);

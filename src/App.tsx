@@ -102,7 +102,7 @@ export default function App() {
             <Route 
               path="/upload" 
               element={
-                <ProtectedRoute allowedRoles={['admin', 'officer']}>
+                <ProtectedRoute allowedRoles={['admin', 'traffic_officer']}>
                   <UploadPage />
                 </ProtectedRoute>
               } 
@@ -129,7 +129,7 @@ export default function App() {
             <Route 
               path="/alerts" 
               element={
-                <ProtectedRoute allowedRoles={['admin', 'officer']}>
+                <ProtectedRoute allowedRoles={['admin', 'traffic_officer']}>
                   <AlertsPage />
                 </ProtectedRoute>
               } 

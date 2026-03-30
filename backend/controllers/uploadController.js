@@ -55,11 +55,32 @@ export const processFile = async (req, res) => {
     
     // Start ML processing asynchronously
     mlProcessFile(file.saved_path, file.file_type, file.id)
-      .then(result => {
+      .then(async (result) => {
         console.log(`Processing complete for file ${id}: ${result.violations_found} violations found`);
+        req.app.get('io').emit('file_status_update', { fileId: parseInt(id), status: 'COMPLETED' });
+        
+        if (result.new_violations && result.new_violations.length > 0) {
+          for (const violation of result.new_violations) {
+            req.app.get('io').emit('new_violation', violation);
+            
+            // Create a notification for each violation
+            try {
+              const message = `New ${violation.violation_type.replace(/_/g, ' ')} detected from uploaded file.`;
+              const notifResult = await query(
+                `INSERT INTO dashboard_notifications (violation_id, message) 
+                 VALUES ($1, $2) RETURNING *`,
+                [violation.id, message]
+              );
+              req.app.get('io').emit('new_notification', notifResult.rows[0]);
+            } catch (notifErr) {
+              console.error('Failed to create notification:', notifErr);
+            }
+          }
+        }
       })
       .catch(err => {
         console.error(`Processing failed for file ${id}:`, err);
+        req.app.get('io').emit('file_status_update', { fileId: parseInt(id), status: 'FAILED' });
       });
     
     res.json({ message: 'Processing started', file_id: id });

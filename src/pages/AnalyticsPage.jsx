@@ -108,7 +108,7 @@ const AnalyticsPage = () => {
             </div>
           </div>
           <p className="text-xl font-bold text-gray-900 truncate">
-            {typeData.length > 0 ? typeData.reduce((prev, current) => (parseInt(prev.count) > parseInt(current.count)) ? prev : current).violation_type.replace(/_/g, ' ') : 'N/A'}
+            {typeData && typeData.length > 0 ? typeData.reduce((prev, current) => (parseInt(prev.count) > parseInt(current.count)) ? prev : current).violation_type.replace(/_/g, ' ') : 'N/A'}
           </p>
           <p className="text-sm text-gray-500 mt-2">Violation type</p>
         </div>
@@ -122,7 +122,7 @@ const AnalyticsPage = () => {
           </div>
           <p className="text-xl font-bold text-gray-900">
             {/* Simple logic to find peak hour from heatmap data */}
-            {heatmapData.length > 0 ? (() => {
+            {heatmapData && heatmapData.length > 0 ? (() => {
               let max = 0;
               let peakHour = 0;
               heatmapData.forEach(d => {

@@ -14,6 +14,7 @@ import alertRoutes from './routes/alertRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import { closeDb } from './config/db.js';
 
 dotenv.config();
 
@@ -75,6 +76,26 @@ async function startServer() {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log('Routes mounted: /api/auth, /api/violations, /api/challans, /api/alerts, /api/analytics, /api/notifications, /api/uploads');
   });
+
+  // Graceful shutdown
+  const shutdown = () => {
+    console.log('Shutting down server...');
+    httpServer.close(() => {
+      console.log('HTTP server closed.');
+      closeDb();
+      process.exit(0);
+    });
+    
+    // Force close after 5 seconds
+    setTimeout(() => {
+      console.error('Could not close connections in time, forcefully shutting down');
+      closeDb();
+      process.exit(1);
+    }, 5000);
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
 startServer();

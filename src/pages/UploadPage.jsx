@@ -17,9 +17,22 @@ const UploadPage = () => {
   const fetchFiles = async () => {
     try {
       const data = await getFiles();
-      setRecentFiles(data);
+      console.log('Fetched files data:', data);
+      
+      if (!Array.isArray(data)) {
+        console.error('Expected array of files, got:', typeof data, data);
+        setRecentFiles([]);
+        return;
+      }
+      
+      const mappedData = data.map(f => ({
+        ...f,
+        status: f.processed ? 'COMPLETED' : 'PENDING'
+      }));
+      setRecentFiles(mappedData);
     } catch (err) {
       console.error('Failed to fetch files', err);
+      setRecentFiles([]);
     }
   };
 
@@ -28,9 +41,12 @@ const UploadPage = () => {
   }, []);
 
   useSocket('file_status_update', (data) => {
-    setRecentFiles(prev => prev.map(f => 
-      f.id === data.fileId ? { ...f, status: data.status } : f
-    ));
+    setRecentFiles(prev => {
+      const current = prev || [];
+      return current.map(f => 
+        f.id === data.fileId ? { ...f, status: data.status } : f
+      );
+    });
     if (data.status === 'COMPLETED') {
       toast.success(`Processing complete for file #${data.fileId}`);
     } else if (data.status === 'FAILED') {
@@ -140,7 +156,7 @@ const UploadPage = () => {
       toast.success('File uploaded successfully');
       
       // Start processing
-      await processFile(response.file.id);
+      await processFile(response.id || response.file?.id);
       toast.success('Processing started');
       
       clearFile();
@@ -295,7 +311,7 @@ const UploadPage = () => {
               <h3 className="text-lg font-semibold text-gray-900">Recent Uploads</h3>
             </div>
             <div className="p-4 flex-1 overflow-y-auto">
-              {recentFiles.length === 0 ? (
+              {!recentFiles || recentFiles.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   <p>No recent uploads</p>
                 </div>
@@ -305,7 +321,7 @@ const UploadPage = () => {
                     <li key={f.id} className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center">
-                          {f.file_type === 'video' ? (
+                          {f.file_type?.toLowerCase() === 'video' ? (
                             <FileVideo className="text-blue-500 mr-3 mt-1" size={20} />
                           ) : (
                             <ImageIcon className="text-green-500 mr-3 mt-1" size={20} />

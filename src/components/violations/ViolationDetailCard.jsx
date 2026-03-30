@@ -15,9 +15,10 @@ const ViolationDetailCard = ({ violation, onStatusChange, onIssueChallan, onSend
         <div className="bg-gray-100 flex items-center justify-center min-h-[400px] border-r border-[#E2E8F0]">
           {violation.snapshot_path ? (
             <img 
-              src={`/${violation.snapshot_path}`} 
+              src={violation.snapshot_path.startsWith('http') ? violation.snapshot_path : `/${violation.snapshot_path}`} 
               alt="Violation Snapshot" 
               className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
             />
           ) : (
             <div className="text-gray-400 flex flex-col items-center">

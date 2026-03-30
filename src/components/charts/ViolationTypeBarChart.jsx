@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-const ViolationTypeBarChart = ({ data }) => {
+const ViolationTypeBarChart = ({ data = [] }) => {
   const colors = {
     NO_HELMET: '#DC2626',
     RED_LIGHT_JUMP: '#D97706',
@@ -9,10 +9,12 @@ const ViolationTypeBarChart = ({ data }) => {
     NO_SEATBELT: '#2563EB'
   };
 
+  const safeData = data || [];
+
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+        <BarChart data={safeData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
           <XAxis 
             dataKey="violation_type" 
@@ -34,7 +36,7 @@ const ViolationTypeBarChart = ({ data }) => {
             labelFormatter={(label) => label.replace(/_/g, ' ')}
           />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {data.map((entry, index) => (
+            {safeData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={colors[entry.violation_type] || '#94A3B8'} />
             ))}
           </Bar>

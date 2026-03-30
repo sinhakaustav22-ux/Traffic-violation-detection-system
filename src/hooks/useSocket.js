@@ -1,8 +1,22 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
+// Create a singleton socket instance outside the hook
+// This prevents multiple connections when the hook is used in multiple components
+let socketInstance = null;
+
+const getSocket = () => {
+  if (!socketInstance) {
+    socketInstance = io('/', {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+  }
+  return socketInstance;
+};
+
 export const useSocket = (event, callback) => {
-  const socketRef = useRef(null);
   const callbackRef = useRef(callback);
 
   useEffect(() => {
@@ -10,21 +24,20 @@ export const useSocket = (event, callback) => {
   }, [callback]);
 
   useEffect(() => {
-    const socketUrl = '/';
-    socketRef.current = io(socketUrl);
+    const socket = getSocket();
 
-    socketRef.current.on(event, (data) => {
+    const handleEvent = (data) => {
       if (callbackRef.current) {
         callbackRef.current(data);
       }
-    });
+    };
+
+    socket.on(event, handleEvent);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socket.off(event, handleEvent);
     };
   }, [event]);
 
-  return socketRef.current;
+  return getSocket();
 };

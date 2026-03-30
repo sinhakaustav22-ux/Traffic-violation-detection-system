@@ -48,7 +48,7 @@ export const getAlerts = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
     
-    const countResult = await query('SELECT COUNT(*) FROM sms_alerts');
+    const countResult = await query('SELECT COUNT(*) as count FROM sms_alerts');
     const total = parseInt(countResult.rows[0].count);
     
     const dataResult = await query(`
